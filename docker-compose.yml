@@ -10,7 +10,7 @@ services:
       context: src/Gml.Web.Api
       dockerfile: Dockerfile
     volumes:
-      - shared-volume:/root
+      - ./data/GmlBackend:/root/${PROJECT_NAME}
     ports:
       - "${PORT_GML_BACKEND}:8082"
     environment:
@@ -21,23 +21,10 @@ services:
       - PROJECT_DESCRIPTION=${PROJECT_DESCRIPTION}
       - PROJECT_POLICYNAME=${PROJECT_POLICYNAME}
       - PROJECT_PATH=${PROJECT_PATH}
+      - SERVICE_TEXTURE_ENDPOINT=${SERVICE_TEXTURE_ENDPOINT}
     user: "${UID}:${GID}"
     networks:
       - gml-network
-
-#  gml-kubek:
-#    image: ghcr.io/gamervii-net/kubek-minecraft-dashboard:main
-#    container_name: gml-kubek
-#    restart: always
-#    build:
-#      context: src/Gml.Web.Client
-#      dockerfile: Dockerfile
-#    ports:
-#      - ${PORT_GML_KUBEK}:3000
-#    networks:
-#      - gml-network
-#    volumes:
-#      - shared-volume:/root
 
   gml-web-frontend:
     image: gml-web-frontend-image
@@ -55,30 +42,17 @@ services:
     image: quay.io/minio/minio:RELEASE.2024-05-01T01-11-10Z-cpuv1
     container_name: gml-minio
     volumes:
-      - shared-volume:/data
+      - ./data/Minio:/data
     ports:
       - ${MINIO_ADDRESS_PORT}:${MINIO_ADDRESS_PORT}
       - ${MINIO_CONSOLE_ADDRESS_PORT}:${MINIO_CONSOLE_ADDRESS_PORT}
+    user: "${UID}:${GID}"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_ADDRESS: ${MINIO_ADDRESS}
       MINIO_CONSOLE_ADDRESS: ${MINIO_CONSOLE_ADDRESS}
     command: minio server /data
-
-  filebrowser:
-    image: filebrowser/filebrowser:v2.30.0
-    container_name: gml-filebrowser
-    restart: always
-    environment:
-      - FB_BASEURL=/filebrowser
-    user: "${UID}:${GID}"
-    volumes:
-      - shared-volume:/srv
-    ports:
-      - ${PORT_GML_FILES}:80
-    networks:
-      - gml-network
 
   gml-web-skins:
     image: gml-web-skins-image
@@ -96,12 +70,8 @@ services:
       - ASPNETCORE_URLS=http://+:8085;
     user: "${UID}:${GID}"
     volumes:
-      - shared-volume:/root
+      - ./data/TextureService:/app/Storage
 
 networks:
   gml-network:
     attachable: true
-
-volumes:
-  shared-volume:
-    name: gml-volume
